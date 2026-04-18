@@ -1,0 +1,180 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define STUD_FILE "students.txt"
+#define CRE_FILE "credentials.txt"
+
+char role[20];
+
+int login() {
+    char u[50], p[50], r[20];
+    char inU[50], inP[50];
+
+    printf("Username: ");
+    scanf("%s", inU);
+    printf("Password: ");
+    scanf("%s", inP);
+
+    FILE *fp = fopen(CRE_FILE, "r");
+    if (!fp) return 0;
+
+    while (fscanf(fp, "%s %s %s", u, p, r) == 3) {
+        if (strcmp(u, inU) == 0 && strcmp(p, inP) == 0) {
+            strcpy(role, r);
+            fclose(fp);
+            return 1;
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+void registerUser() {
+    char u[50], p[50], r[20];
+
+    printf("New username: ");
+    scanf("%s", u);
+    printf("Password: ");
+    scanf("%s", p);
+    printf("Role(admin/staff/guest): ");
+    scanf("%s", r);
+
+    FILE *fp = fopen(CRE_FILE, "a");
+    fprintf(fp, "%s %s %s\n", u, p, r);
+    fclose(fp);
+
+    printf("Registered\n");
+}
+
+void addStudent() {
+    FILE *fp = fopen(STUD_FILE, "a");
+
+    int roll;
+    char name[50];
+    float mark;
+
+    printf("Roll: ");
+    scanf("%d", &roll);
+    printf("Name: ");
+    scanf("%s", name);
+    printf("Mark: ");
+    scanf("%f", &mark);
+
+    fprintf(fp, "%d %s %.2f\n", roll, name, mark);
+    fclose(fp);
+}
+
+void displayStudents() {
+    FILE *fp = fopen(STUD_FILE, "r");
+    int roll;
+    char name[50];
+    float mark;
+
+    while (fscanf(fp, "%d %s %f", &roll, name, &mark) == 3) {
+        printf("%d %s %.2f\n", roll, name, mark);
+    }
+
+    fclose(fp);
+}
+
+void searchStudent() {
+    FILE *fp = fopen(STUD_FILE, "r");
+
+    int find, roll;
+    char name[50];
+    float mark;
+
+    printf("Roll: ");
+    scanf("%d", &find);
+
+    while (fscanf(fp, "%d %s %f", &roll, name, &mark) == 3) {
+        if (roll == find) {
+            printf("%d %s %.2f\n", roll, name, mark);
+            fclose(fp);
+            return;
+        }
+    }
+
+    printf("Not found\n");
+    fclose(fp);
+}
+
+void deleteStudent() {
+    FILE *fp = fopen(STUD_FILE, "r");
+    FILE *temp = fopen("temp.txt", "w");
+
+    int del, roll;
+    char name[50];
+    float mark;
+
+    printf("Roll to delete: ");
+    scanf("%d", &del);
+
+    while (fscanf(fp, "%d %s %f", &roll, name, &mark) == 3) {
+        if (roll != del) {
+            fprintf(temp, "%d %s %.2f\n", roll, name, mark);
+        }
+    }
+
+    fclose(fp);
+    fclose(temp);
+
+    remove(STUD_FILE);
+    rename("temp.txt", STUD_FILE);
+}
+
+void adminMenu() {
+    int c;
+    while (1) {
+        printf("\n1.Add 2.Display 3.Search 4.Delete 5.Logout\n");
+        scanf("%d",&c);
+
+        if(c==1) addStudent();
+        else if(c==2) displayStudents();
+        else if(c==3) searchStudent();
+        else if(c==4) deleteStudent();
+        else break;
+    }
+}
+
+void userMenu() {
+    int c;
+    while (1) {
+        printf("\n1.Display 2.Search 3.Logout\n");
+        scanf("%d",&c);
+
+        if(c==1) displayStudents();
+        else if(c==2) searchStudent();
+        else break;
+    }
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\n1.Login 2.Register 3.Exit\n");
+        scanf("%d", &choice);
+
+        if (choice == 1) {
+            if (login()) {
+                if (strcmp(role,"admin")==0)
+                    adminMenu();
+                else
+                    userMenu();
+            } else {
+                printf("Invalid login\n");
+            }
+        }
+        else if (choice == 2) {
+            registerUser();
+        }
+        else {
+            break;
+        }
+    }
+
+    return 0;
+}
